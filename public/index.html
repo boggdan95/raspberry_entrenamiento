@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <script src="/socket.io/socket.io.js"></script>
+    <script type="text/javascript" src="/scripts/script.js"></script>
+</head>
+<body>
+  <h1>Control LED light_v2</h1>
+  <div>
+          <div>
+              <p class="text1">Modo de tiempo de reacción</p>
+              <select name="Reaccion" id="reaccion" class="drop_menu">
+                  <option class="option">Sencillo</option>
+                  <option class="option">Complejo</option>
+              </select>
+          </div>
+          <div>
+              <p class="text1">Tiempo (Segundos)</p>
+              <select name="Tiempo" id="tiempo" class="drop_menu">
+                  <option class="option">30</option>
+                  <option class="option">45</option>
+                  <option class="option">60</option>
+                  <option class="option">90</option>
+              </select>
+          </div>
+          <div>
+              <p class="text1">Repeticiones</p>
+              <select name="Repeticiones" id="repeticiones" class="drop_menu">
+                  <option>10</option>
+                  <option>11</option>
+                  <option>12</option>
+                  <option>13</option>
+              </select>
+           </div>
+          <div>
+              <p class="text1">Módulos</p>
+              <select name="Módulo" id="modulo" class="drop_menu">
+                  <option>1</option>
+                  <option>2</option>
+                  <option>3</option>
+                  <option>4</option>
+              </select>
+           </div>
+           <div>
+             <input type="checkbox" id="is_secuencial" value="Secuencial">Secuencial<br>
+           </div>
+              <div class="subcontent">
+                  <a href="homepage.html"><button type="button" class="btn_return">Regresar</button></a>
+                  <button onclick="startTraining()">Iniciar</button>
+              </div>
+        </div>
+</body>
+</html>
