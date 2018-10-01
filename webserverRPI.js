@@ -1,9 +1,9 @@
 var express = require('express');
 var app = express();
 var path = require('path');
-var http = require('http').Server(app);
-var io = require('socket.io')(http) //require socket.io module and pass the http object (server)
- var Gpio = require('onoff').Gpio; //include onoff to interact with the GPIO
+var server = require('http').Server(app);
+var io = require('socket.io')(server) //require socket.io module and pass the http object (server)
+var Gpio = require('onoff').Gpio; //include onoff to interact with the GPIO
 
  var led1 = new Gpio(4, 'out'); //use GPIO pin 4 as output
  var led2 = new Gpio(5, 'out'); //use GPIO pin 5 as output
@@ -15,22 +15,13 @@ var io = require('socket.io')(http) //require socket.io module and pass the http
  var pushButton4 = new Gpio(25, 'in', 'falling', {debounceTimeout: 3}); //use GPIO pin 25 as input, and 'both' button presses, and releases should be handled
  var led = [led1,led2,led3,led4];
  var inputButtons = [pushButton1,pushButton2,pushButton3,pushButton4];
- var status = 0;
 
  function getRandomInt(min, max) {
    return Math.floor(Math.random() * (max - min)) + min;
  }
 
-app.use(express.static(path.join(__dirname + '/public')));
-// viewed at http://localhost:8080
-app.get('/', function(req, res) {
-    // __dirname es la direccion de server.js
-
-    res.sendFile(path.join(__dirname + '/public/index.html'));
-});
-
-http.listen(3000, function(){
-  console.log('listening on :3000');
+server.listen(5000, function(){
+  console.log('listening on :5000');
 });
 
 //******************************************************************************
@@ -55,16 +46,9 @@ io.sockets.on('connection', function (socket) {// WebSocket Connection
     return value;
   }
 
-socket.on('Datos', function(tipo,tiempo,reps, modulos, is_secuencial){
-  console.log(tipo);
-  console.log(tiempo);
-  console.log(reps);
-  console.log(modulos);
-  console.log(is_secuencial);
-})
-
 //******************************************************************************
   socket.on('entrenamiento general', function(type,tiempo,repeticiones,modulos,is_secuencial){
+    console.log(type,tiempo,repeticiones,modulos,is_secuencial);
     const totalTime = tiempo*1000;
     const noTry = repeticiones;
     const modules = modulos;
@@ -111,7 +95,6 @@ socket.on('Datos', function(tipo,tiempo,reps, modulos, is_secuencial){
             else {
               currentState = currentState + 1;
             }
-            console.log('xxx', currentState);
             status = changeState(led[activateModule[i]],1);
             onTime = Date.now();
           },activationTime[i]));
@@ -122,6 +105,7 @@ socket.on('Datos', function(tipo,tiempo,reps, modulos, is_secuencial){
            changeState(led[activateModule[i]],0);
            reactionTime.push('--');
            hitmissArray.push('Miss');
+           socket.emit('results','--','Miss');
          },desactivationTime[i]));
        }
 
@@ -136,13 +120,12 @@ socket.on('Datos', function(tipo,tiempo,reps, modulos, is_secuencial){
                 return err;
               }
               if (value != status) {
-                console.log('Cambio de estado');
-                console.log('zzz',currentState);
                 if (activateModule[currentState] === 0){
                   status = changeState(led[0],0);
                   clearTimeout(timeOFF[currentState]);
                   reaction = Date.now();
                   reactionTime.push(reaction-onTime);
+                  socket.emit('results',reaction-onTime,'Hit');
                   hitmissArray.push('Hit');
                 }
                 else {
@@ -150,6 +133,7 @@ socket.on('Datos', function(tipo,tiempo,reps, modulos, is_secuencial){
                   clearTimeout(timeOFF[currentState]);
                   reactionTime.push('--');
                   hitmissArray.push('Error');
+                  socket.emit('results','--','Error');
                 }
               }
            });
@@ -158,13 +142,12 @@ socket.on('Datos', function(tipo,tiempo,reps, modulos, is_secuencial){
                 return err;
               }
               if (value != status) {
-                console.log('Cambio de estado');
-                console.log('zzz',currentState);
                 if (activateModule[currentState] === 1){
                   status = changeState(led[1],0);
                   clearTimeout(timeOFF[currentState]);
                   reaction = Date.now();
                   reactionTime.push(reaction-onTime);
+                  socket.emit('results',reaction-onTime,'Hit');
                   hitmissArray.push('Hit');
                 }
                 else {
@@ -172,6 +155,7 @@ socket.on('Datos', function(tipo,tiempo,reps, modulos, is_secuencial){
                   clearTimeout(timeOFF[currentState]);
                   reactionTime.push('--');
                   hitmissArray.push('Error');
+                  socket.emit('results','--','Error');
                 }
               }
            });
@@ -180,13 +164,12 @@ socket.on('Datos', function(tipo,tiempo,reps, modulos, is_secuencial){
                 return err;
               }
               if (value != status) {
-                console.log('Cambio de estado');
-                console.log('zzz',currentState);
                 if (activateModule[currentState] === 2){
                   status = changeState(led[2],0);
                   clearTimeout(timeOFF[currentState]);
                   reaction = Date.now();
                   reactionTime.push(reaction-onTime);
+                  socket.emit('results',reaction-onTime,'Hit');
                   hitmissArray.push('Hit');
                 }
                 else {
@@ -194,6 +177,7 @@ socket.on('Datos', function(tipo,tiempo,reps, modulos, is_secuencial){
                   clearTimeout(timeOFF[currentState]);
                   reactionTime.push('--');
                   hitmissArray.push('Error');
+                  socket.emit('results','--','Error');
                 }
               }
            });
@@ -202,13 +186,12 @@ socket.on('Datos', function(tipo,tiempo,reps, modulos, is_secuencial){
                 return err;
               }
               if (value != status) {
-                console.log('Cambio de estado');
-                console.log('zzz',currentState);
                 if (activateModule[currentState] === 3){
                   status = changeState(led[3],0);
                   clearTimeout(timeOFF[currentState]);
                   reaction = Date.now();
                   reactionTime.push(reaction-onTime);
+                  socket.emit('results',reaction-onTime,'Hit');
                   hitmissArray.push('Hit');
                 }
                 else {
@@ -216,6 +199,7 @@ socket.on('Datos', function(tipo,tiempo,reps, modulos, is_secuencial){
                   clearTimeout(timeOFF[currentState]);
                   reactionTime.push('--');
                   hitmissArray.push('Error');
+                  socket.emit('results','--','Error');
                 }
               }
            });
@@ -236,6 +220,7 @@ socket.on('Datos', function(tipo,tiempo,reps, modulos, is_secuencial){
             status = changeState(led[0],0);
             reactionTime.push('--');
             hitmissArray.push('Miss');
+            socket.emit('results','--','Miss');
           },desactivationTime[i]));
         }
 
@@ -250,27 +235,20 @@ socket.on('Datos', function(tipo,tiempo,reps, modulos, is_secuencial){
              return err;
            }
            if (value != status) {
-             console.log("xxx", currentState);
-             console.log('Cambio de estado');
              clearTimeout(timeOFF[(currentState/10)-1]);
              status = changeState(led[0],0);
-             console.log('TimeOFF length', timeOFF.length);
              reaction = Date.now();
              reactionTime.push(reaction-onTime);
-             socket.emit('tiempo',reaction-onTime,'Hit');
+             socket.emit('results',reaction-onTime,'Hit');
              hitmissArray.push('Hit');
            }
         });
-
-
-
       }
     }
     else
     {
       var activationTime = [];var desactivationTime = [];var reactionTime = [];var hitmissArray = [];
       var status = 0;
-
 
       for (var i = 0; i < noTry; i++) {
         activationTime.push(getRandomInt(0,(stepTime-(stepTime/5)))+(i*stepTime));
@@ -305,7 +283,6 @@ socket.on('Datos', function(tipo,tiempo,reps, modulos, is_secuencial){
               else {
                 currentState = currentState + 1;
               }
-              console.log('xxx', currentState);
               status = changeState(led[activateModule[i]],1);
               onTime = Date.now();
             },activationTime[i]));
@@ -316,6 +293,7 @@ socket.on('Datos', function(tipo,tiempo,reps, modulos, is_secuencial){
                changeState(led[activateModule[i]],0);
                reactionTime.push('--');
                hitmissArray.push('Miss');
+               socket.emit('results','--','Miss');
              },desactivationTime[i]));
            }
 
@@ -330,13 +308,12 @@ socket.on('Datos', function(tipo,tiempo,reps, modulos, is_secuencial){
                 return err;
               }
               if (value != status) {
-                console.log('Cambio de estado');
-                console.log('zzz',currentState);
                 if (activateModule[currentState] === 0){
                   status = changeState(led[0],0);
                   clearTimeout(timeOFF[currentState]);
                   reaction = Date.now();
                   reactionTime.push(reaction-onTime);
+                  socket.emit('results',reaction-onTime,'Hit');
                   hitmissArray.push('Hit');
                 }
                 else {
@@ -344,6 +321,7 @@ socket.on('Datos', function(tipo,tiempo,reps, modulos, is_secuencial){
                   clearTimeout(timeOFF[currentState]);
                   reactionTime.push('--');
                   hitmissArray.push('Error');
+                  socket.emit('results','--','Error');
                 }
               }
            });
@@ -352,13 +330,12 @@ socket.on('Datos', function(tipo,tiempo,reps, modulos, is_secuencial){
                 return err;
               }
               if (value != status) {
-                console.log('Cambio de estado');
-                console.log('zzz',currentState);
                 if (activateModule[currentState] === 1){
                   status = changeState(led[1],0);
                   clearTimeout(timeOFF[currentState]);
                   reaction = Date.now();
                   reactionTime.push(reaction-onTime);
+                  socket.emit('results',reaction-onTime,'Hit');
                   hitmissArray.push('Hit');
                 }
                 else {
@@ -366,6 +343,7 @@ socket.on('Datos', function(tipo,tiempo,reps, modulos, is_secuencial){
                   clearTimeout(timeOFF[currentState]);
                   reactionTime.push('--');
                   hitmissArray.push('Error');
+                  socket.emit('results','--','Error');
                 }
               }
            });
@@ -374,13 +352,12 @@ socket.on('Datos', function(tipo,tiempo,reps, modulos, is_secuencial){
                 return err;
               }
               if (value != status) {
-                console.log('Cambio de estado');
-                console.log('zzz',currentState);
                 if (activateModule[currentState] === 2){
                   status = changeState(led[2],0);
                   clearTimeout(timeOFF[currentState]);
                   reaction = Date.now();
                   reactionTime.push(reaction-onTime);
+                  socket.emit('results',reaction-onTime,'Hit');
                   hitmissArray.push('Hit');
                 }
                 else {
@@ -388,6 +365,7 @@ socket.on('Datos', function(tipo,tiempo,reps, modulos, is_secuencial){
                   clearTimeout(timeOFF[currentState]);
                   reactionTime.push('--');
                   hitmissArray.push('Error');
+                  socket.emit('results','--','Error');
                 }
               }
            });
@@ -396,13 +374,12 @@ socket.on('Datos', function(tipo,tiempo,reps, modulos, is_secuencial){
                 return err;
               }
               if (value != status) {
-                console.log('Cambio de estado');
-                console.log('zzz',currentState);
                 if (activateModule[currentState] === 3){
                   status = changeState(led[3],0);
                   clearTimeout(timeOFF[currentState]);
                   reaction = Date.now();
                   reactionTime.push(reaction-onTime);
+                  socket.emit('results',reaction-onTime,'Hit');
                   hitmissArray.push('Hit');
                 }
                 else {
@@ -410,6 +387,7 @@ socket.on('Datos', function(tipo,tiempo,reps, modulos, is_secuencial){
                   clearTimeout(timeOFF[currentState]);
                   reactionTime.push('--');
                   hitmissArray.push('Error');
+                  socket.emit('results','--','Error');
                 }
               }
            });
@@ -421,7 +399,6 @@ socket.on('Datos', function(tipo,tiempo,reps, modulos, is_secuencial){
         for (var i = 0; i < activationTime.length; i++) {
           timeON.push(setTimeout(function () {
             currentState = currentState + i;
-            console.log("xxx", currentState);
             status = changeState(led[0],1);
             onTime = Date.now();
           },activationTime[i]));
@@ -429,6 +406,7 @@ socket.on('Datos', function(tipo,tiempo,reps, modulos, is_secuencial){
             status = changeState(led[0],0);
             reactionTime.push('--');
             hitmissArray.push('Miss');
+            socket.emit('results','--','Miss');
           },desactivationTime[i]));
          }
 
@@ -444,21 +422,17 @@ socket.on('Datos', function(tipo,tiempo,reps, modulos, is_secuencial){
                 return err;
               }
               if (value != status) {
-                console.log("yyy", currentState);
-                console.log('Cambio de estado');
                 status = changeState(led[0],0);
                 clearTimeout(timeOFF[(currentState/noTry)-1]);
                 var reaction = Date.now();
                 reactionTime.push(reaction-onTime);
-                socket.emit('tiempo',reaction-onTime,'Hit');
+                socket.emit('results',reaction-onTime,'Hit');
                 hitmissArray.push('Hit');
               }
            });
       }
 
     }
-
-
   });
 
 //******************************************************************************
@@ -468,8 +442,6 @@ socket.on('Datos', function(tipo,tiempo,reps, modulos, is_secuencial){
     const stepTime = Math.floor(totalTime/noTry); //Tiempo maximo en el que se debe activar/desactivar una salida
     var activationTime = [];var desactivationTime = [];var reactionTime = [];var hitmissArray = [];
     var status = 0;
-    console.log('Cantidad', noTry);
-    console.log('Max time', stepTime);
 
     for (var i = 0; i < noTry; i++) {
       activationTime.push(getRandomInt(0,(stepTime-3000))+(i*stepTime));
@@ -483,7 +455,6 @@ socket.on('Datos', function(tipo,tiempo,reps, modulos, is_secuencial){
     for (var i = 0; i < activationTime.length; i++) {
       timeON.push(setTimeout(function () {
         currentState = currentState + i;
-        console.log("xxx", currentState);
         status = changeState(led[0],1);
         onTime = Date.now();
       },activationTime[i]));
@@ -491,6 +462,7 @@ socket.on('Datos', function(tipo,tiempo,reps, modulos, is_secuencial){
         status = changeState(led[0],0);
         reactionTime.push('--');
         hitmissArray.push('Miss');
+        socket.emit('results','--','Miss');
       },desactivationTime[i]));
      }
 
@@ -506,13 +478,12 @@ socket.on('Datos', function(tipo,tiempo,reps, modulos, is_secuencial){
             return err;
           }
           if (value != status) {
-            console.log("yyy", currentState);
-            console.log('Cambio de estado');
             status = changeState(led[0],0);
             clearTimeout(timeOFF[(currentState/noTry)-1]);
             var reaction = Date.now();
             reactionTime.push(reaction-onTime);
             hitmissArray.push('Hit');
+            socket.emit('results',reaction-onTime,'Hit');
           }
        });
 
@@ -529,8 +500,6 @@ socket.on('Datos', function(tipo,tiempo,reps, modulos, is_secuencial){
       for (var i = 0; i < step; i++) {
         activationTime.push((i+1)*stepTime);
         desactivationTime.push(activationTime[i]+limitTime);
-        console.log(activationTime[i]);
-        console.log(desactivationTime[i]);
       }
 
       var timeON = [];var timeOFF = [];
@@ -546,6 +515,7 @@ socket.on('Datos', function(tipo,tiempo,reps, modulos, is_secuencial){
           status = changeState(led[0],0);
           reactionTime.push('--');
           hitmissArray.push('Miss');
+          socket.emit('results','--','Miss');
         },desactivationTime[i]));
       }
 
@@ -561,14 +531,12 @@ socket.on('Datos', function(tipo,tiempo,reps, modulos, is_secuencial){
         }
 
         if (value != status) {
-          console.log("xxx", currentState);
-          console.log('Cambio de estado');
           clearTimeout(timeOFF[(currentState/10)-1]);
           status = changeState(led[0],0);
-          console.log('TimeOFF length', timeOFF.length);
           reaction = Date.now();
           reactionTime.push(reaction-onTime);
           hitmissArray.push('Hit');
+          socket.emit('results',reaction-onTime,'Hit');
         }
      });
  });
@@ -586,10 +554,6 @@ socket.on('Datos', function(tipo,tiempo,reps, modulos, is_secuencial){
      activationTime.push((i+1)*stepTime);
      desactivationTime.push(activationTime[i]+limitTime);
      activateModule.push(getRandomInt(0,2));
-   }
-
-   for (var i = 0; i < activationTime.length; i++) {
-     console.log(activateModule[i]);
    }
 
    var timeON = [];var timeOFF = [];
@@ -610,7 +574,6 @@ socket.on('Datos', function(tipo,tiempo,reps, modulos, is_secuencial){
       else {
         currentState = currentState + 1;
       }
-      console.log('xxx', currentState);
       status = changeState(led[activateModule[i]],1);
       onTime = Date.now();
     },activationTime[i]));
@@ -621,6 +584,7 @@ socket.on('Datos', function(tipo,tiempo,reps, modulos, is_secuencial){
       changeState(led[activateModule[i]],0);
       reactionTime.push('--');
       hitmissArray.push('Miss');
+      socket.emit('results','--','Miss');
     },desactivationTime[i]));
   }
 
@@ -635,20 +599,20 @@ socket.on('Datos', function(tipo,tiempo,reps, modulos, is_secuencial){
            return err;
          }
          if (value != status) {
-           console.log('Cambio de estado');
-           console.log('zzz',currentState);
            if (activateModule[currentState] === 0){
              status = changeState(led[0],0);
              clearTimeout(timeOFF[currentState]);
              reaction = Date.now();
              reactionTime.push(reaction-onTime);
              hitmissArray.push('Hit');
+             socket.emit('results',reaction-onTime,'Hit');
            }
            else {
              status = changeState(led[activateModule[currentState]],0);
              clearTimeout(timeOFF[currentState]);
              reactionTime.push('--');
              hitmissArray.push('Error');
+             socket.emit('results','--','Error');
            }
          }
       });
@@ -657,20 +621,20 @@ socket.on('Datos', function(tipo,tiempo,reps, modulos, is_secuencial){
            return err;
          }
          if (value != status) {
-           console.log('Cambio de estado');
-           console.log('zzz',currentState);
            if (activateModule[currentState] === 1){
              status = changeState(led[1],0);
              clearTimeout(timeOFF[currentState]);
              reaction = Date.now();
              reactionTime.push(reaction-onTime);
              hitmissArray.push('Hit');
+             socket.emit('results',reaction-onTime,'Hit');
            }
            else {
              status = changeState(led[activateModule[currentState]],0);
              clearTimeout(timeOFF[currentState]);
              reactionTime.push('--');
              hitmissArray.push('Error');
+             socket.emit('results','--','Error');
            }
          }
       });
@@ -689,5 +653,3 @@ process.on('SIGINT', function () { //on ctrl+c
   process.exit(); //exit completely
 
   });
-
-// Funciones
